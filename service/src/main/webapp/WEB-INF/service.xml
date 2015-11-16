@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cxf="http://cxf.apache.org/core"
+       xmlns:jaxws="http://cxf.apache.org/jaxws"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="ws"></context:component-scan>
+    <context:annotation-config />
+
+    <!-- cxf -->
+    <import resource="classpath:META-INF/cxf/cxf.xml" />
+    <import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+
+    <!-- Import service security-->
+    <import resource="classpath:META-INF/service/ws.auth.xml" />
+
+    <bean id="jsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider">
+        <!-- <property name="JSONPFunctionName" value="jsoncallback" /> -->
+        <property name="mapper" ref="jacksonObjectMapper" />
+    </bean>
+
+    <bean id="jacksonObjectMapper" class="org.codehaus.jackson.map.ObjectMapper">
+        <property name="serializationConfig.dateFormat">
+            <bean class="java.text.SimpleDateFormat">
+                <constructor-arg value="dd/MM/yyyy" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- Quick create of service resources -->
+    <bean id="userResource" class="ws.endpoint.UserResource"></bean>
+    <bean id="authResource" class="ws.endpoint.AuthenticationResource">
+        <property name="authManager" ref="authenticationManager" />
+        <property name="userAuthService" ref="userAuthService" />
+    </bean>
+    <jaxrs:server id="serverjson" address="/secure">
+        <jaxrs:serviceBeans>
+            <ref bean="userResource" />
+            <ref bean="authResource" />
+        </jaxrs:serviceBeans>
+        <jaxrs:providers>
+            <ref bean="jsonProvider" />
+        </jaxrs:providers>
+    </jaxrs:server>
+</beans>
